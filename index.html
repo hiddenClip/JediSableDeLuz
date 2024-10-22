@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans:wght@700&display=swap" rel="stylesheet">
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Hidden Clip</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+</head>
+<body>
+    <h1>On</h1>
+    <!-- <h1 class="lol">.</h1> -->
+    <audio id="sable-sound" src="sable sound.mp3" preload="auto"></audio>
+
+    <button id="join-btn" class="neon-button">Entrar</button>
+
+    <div id="stream-wrapper">
+        <div id="video-streams"></div>
+
+        <div id="stream-controls" style="display: none;">
+            <button id="leave-btn" class="hid_bo">Leave Stream</button>
+            <button id="mic-btn" class="hid_bo">Mic On</button>
+            <button id="camera-btn" class="hid_bo">Camera on</button>
+        </div>
+    </div>
+
+    <div class="lightsaber" style="display: none;">
+        <div class="light"></div>
+        <div class="top"></div>
+        <div class="middle"></div>
+        <div class="bottom"></div>
+    </div>
+    
+    <video id="recorded-video" controls style="display: none;"></video>
+
+    <script src="AgoraRTC_N-4.7.3.js"></script>
+    <script src='main.js'></script>
+</body>
+</html>
