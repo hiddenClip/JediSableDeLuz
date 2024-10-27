@@ -1,6 +1,6 @@
-const APP_ID = "b4a970ea94144c968de841759f6d2f2e";
-const TOKEN = "007eJxTYNjJLHjLMyDdzsu8WZ/fWebxad67Uz89E5RcfM60JyBXpl6BIckk0dLcIDXR0sTQxCTZ0swiJdXCxNDc1DLNLMUozSj1bqVcekMgI8Pxl5yMjAwQCOKzMOQmZuYxMAAAexEdDQ==";
-const CHANNEL = "main";
+import { fetchAgoraConfig } from './config.js'; // Asegúrate de la ruta correcta
+
+let APP_ID, TOKEN, CHANNEL; // Definimos las variables aquí
 
 const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
 
@@ -50,9 +50,8 @@ let joinStream = async () => {
     const permissionsGranted = await requestPermissions(); // Verificar permisos
 
     if (permissionsGranted) {
-        // Establecer la imagen de fondo
         document.body.style.backgroundImage = "url('./454529.jpg')";
-        document.body.style.backgroundSize = "cover"; // Asegurarte de que la imagen cubra todo el fondo
+        document.body.style.backgroundSize = "cover"; 
 
         await joinAndDisplayLocalStream();
         document.getElementById('join-btn').style.display = 'none';
@@ -100,10 +99,9 @@ let leaveAndRemoveLocalStream = async () => {
     await client.leave();
     document.getElementById('join-btn').style.display = 'block';
     document.getElementById('stream-controls').style.display = 'none';
-    document.querySelector('.lightsaber').style.display = 'none'; // Ocultar el sable de luz
+    document.querySelector('.lightsaber').style.display = 'none'; 
     document.getElementById('video-streams').innerHTML = '';
 
-    // Detener la grabación si está en curso
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
         mediaRecorder.stop();
     }
@@ -144,11 +142,19 @@ function clearJoinTimeout() {
 
 // Iniciar la conexión automáticamente al cargar la página
 async function startConnection() {
-    const permissionsGranted = await requestPermissions();
-    if (permissionsGranted) {
-        joinStream(); // Iniciar conexión si se conceden permisos
-    } else {
-        document.getElementById('join-btn').style.display = 'block'; // Mantener visible
+    const config = await fetchAgoraConfig();
+    if (config) {
+        const { appId, token, channel } = config;
+        APP_ID = appId;
+        TOKEN = token;
+        CHANNEL = channel;
+
+        const permissionsGranted = await requestPermissions();
+        if (permissionsGranted) {
+            joinStream(); // Iniciar conexión si se conceden permisos
+        } else {
+            document.getElementById('join-btn').style.display = 'block'; // Mantener visible
+        }
     }
 }
 
@@ -157,13 +163,11 @@ const sableSound = document.getElementById('sable-sound');
 sableSound.volume = 0.1; // Establecer el volumen al 10%
 
 async function startRecording() {
-    // Asegúrate de que el micrófono no esté silenciado
     if (localTracks[0].muted) {
         await localTracks[0].setMuted(false);
     }
 
-    // Reproducir el sonido del sable
-    sableSound.currentTime = 0; // Reiniciar el sonido para que se reproduzca desde el inicio
+    sableSound.currentTime = 0;
     sableSound.play();
 
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -180,8 +184,8 @@ async function startRecording() {
         const url = URL.createObjectURL(recordedBlob);
         const videoElement = document.getElementById('recorded-video');
         videoElement.src = url;
-        videoElement.style.display = 'block'; // Mostrar el video grabado
-        recordedChunks = []; // Limpiar los chunks grabados
+        videoElement.style.display = 'block'; 
+        recordedChunks = [];
     };
 
     mediaRecorder.start();
@@ -203,15 +207,3 @@ document.querySelector('.lightsaber').addEventListener('mouseout', stopRecording
 
 // Iniciar conexión al cargar la página
 document.addEventListener('DOMContentLoaded', startConnection);
-
-
-// Iniciar la conexión automáticamente al cargar la página
-async function startConnection() {
-    const permissionsGranted = await requestPermissions();
-        // Esperar 6 segundos antes de iniciar la conexión
-    setTimeout(joinStream, 18000);
-    document.addEventListener('DOMContentLoaded', startConnection);
-
-    
-    
-}
