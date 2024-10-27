@@ -1,12 +1,11 @@
 const APP_ID = "b4a970ea94144c968de841759f6d2f2e";
-const TOKEN = "1007eJxTYNjJLHjLMyDdzsu8WZ/fWebxad67Uz89E5RcfM60JyBXpl6BIckk0dLcIDXR0sTQxCTZ0swiJdXCxNDc1DLNLMUozSj1bqVcekMgI8Pxl5yMjAwQCOKzMOQmZuYxMAAAexEdDQ==";
+const TOKEN = "007eJxTYNjJLHjLMyDdzsu8WZ/fWebxad67Uz89E5RcfM60JyBXpl6BIckk0dLcIDXR0sTQxCTZ0swiJdXCxNDc1DLNLMUozSj1bqVcekMgI8Pxl5yMjAwQCOKzMOQmZuYxMAAAexEdDQ==";
 const CHANNEL = "main";
 
 const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
 
 let localTracks = [];
 let remoteUsers = {};
-let joinTimeout;
 let mediaRecorder;
 let recordedChunks = [];
 
@@ -31,9 +30,9 @@ let joinAndDisplayLocalStream = async () => {
     client.on('user-published', handleUserJoined);
     client.on('user-left', handleUserLeft);
 
-    let UID = await client.join(APP_ID, CHANNEL, TOKEN, null);
+    try {
+        let UID = await client.join(APP_ID, CHANNEL, TOKEN, null);
 
-    if (await requestPermissions()) {
         let player = `<div class="video-container" id="user-container-${UID}">
                             <div class="video-player" id="user-${UID}"></div>
                       </div>`;
@@ -41,12 +40,14 @@ let joinAndDisplayLocalStream = async () => {
         
         localTracks[1].play(`user-${UID}`);
         await client.publish([localTracks[0], localTracks[1]]);
+    } catch (error) {
+        console.error("Error al unirse a Agora: ", error);
+        alert("No se pudo unir al canal. Puedes seguir usando la aplicación sin video.");
     }
 };
 
 // Función para unirse al stream
 let joinStream = async () => {
-    clearJoinTimeout(); // Limpiar el temporizador si se hace clic
     const permissionsGranted = await requestPermissions(); // Verificar permisos
 
     if (permissionsGranted) {
@@ -58,8 +59,25 @@ let joinStream = async () => {
         document.getElementById('join-btn').style.display = 'none';
         document.getElementById('stream-controls').style.display = 'flex';
         document.querySelector('.lightsaber').style.display = 'block'; // Mostrar el sable de luz
+    } else {
+        resetApp(); // Restablecer la aplicación si no se conceden permisos
     }
 };
+
+// Función para restablecer la aplicación
+function resetApp() {
+    localTracks.forEach(track => {
+        if (track) {
+            track.stop();
+            track.close();
+        }
+    });
+    localTracks = [];
+    document.getElementById('join-btn').style.display = 'block';
+    document.getElementById('stream-controls').style.display = 'none';
+    document.querySelector('.lightsaber').style.display = 'none'; // Ocultar el sable de luz
+    document.getElementById('video-streams').innerHTML = '';
+}
 
 // Manejar la unión de usuarios remotos
 let handleUserJoined = async (user, mediaType) => {
@@ -98,15 +116,7 @@ let leaveAndRemoveLocalStream = async () => {
     }
 
     await client.leave();
-    document.getElementById('join-btn').style.display = 'block';
-    document.getElementById('stream-controls').style.display = 'none';
-    document.querySelector('.lightsaber').style.display = 'none'; // Ocultar el sable de luz
-    document.getElementById('video-streams').innerHTML = '';
-
-    // Detener la grabación si está en curso
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
-    }
+    resetApp(); // Restablecer la aplicación
 };
 
 // Alternar micrófono
@@ -148,7 +158,7 @@ async function startConnection() {
     if (permissionsGranted) {
         joinStream(); // Iniciar conexión si se conceden permisos
     } else {
-        document.getElementById('join-btn').style.display = 'block'; // Mantener visible
+        resetApp(); // Restablecer si no se conceden permisos
     }
 }
 
@@ -203,15 +213,3 @@ document.querySelector('.lightsaber').addEventListener('mouseout', stopRecording
 
 // Iniciar conexión al cargar la página
 document.addEventListener('DOMContentLoaded', startConnection);
-
-
-// Iniciar la conexión automáticamente al cargar la página
-async function startConnection() {
-    const permissionsGranted = await requestPermissions();
-        // Esperar 6 segundos antes de iniciar la conexión
-    setTimeout(joinStream, 18000);
-    document.addEventListener('DOMContentLoaded', startConnection);
-
-    
-    
-}
