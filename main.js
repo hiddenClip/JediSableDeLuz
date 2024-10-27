@@ -6,6 +6,7 @@ const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
 
 let localTracks = [];
 let remoteUsers = {};
+let joinTimeout;
 let mediaRecorder;
 let recordedChunks = [];
 
@@ -30,9 +31,9 @@ let joinAndDisplayLocalStream = async () => {
     client.on('user-published', handleUserJoined);
     client.on('user-left', handleUserLeft);
 
-    try {
-        let UID = await client.join(APP_ID, CHANNEL, TOKEN, null);
+    let UID = await client.join(APP_ID, CHANNEL, TOKEN, null);
 
+    if (await requestPermissions()) {
         let player = `<div class="video-container" id="user-container-${UID}">
                             <div class="video-player" id="user-${UID}"></div>
                       </div>`;
@@ -40,44 +41,25 @@ let joinAndDisplayLocalStream = async () => {
         
         localTracks[1].play(`user-${UID}`);
         await client.publish([localTracks[0], localTracks[1]]);
-    } catch (error) {
-        console.error("Error al unirse a Agora: ", error);
-        alert("No se pudo unir al canal. Puedes seguir usando la aplicación sin video.");
     }
 };
 
 // Función para unirse al stream
 let joinStream = async () => {
+    clearJoinTimeout(); // Limpiar el temporizador si se hace clic
     const permissionsGranted = await requestPermissions(); // Verificar permisos
 
     if (permissionsGranted) {
         // Establecer la imagen de fondo
         document.body.style.backgroundImage = "url('./454529.jpg')";
-        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundSize = "cover"; // Asegurarte de que la imagen cubra todo el fondo
 
         await joinAndDisplayLocalStream();
         document.getElementById('join-btn').style.display = 'none';
         document.getElementById('stream-controls').style.display = 'flex';
-        document.querySelector('.lightsaber').style.display = 'block';
-    } else {
-        resetApp(); // Restablecer la aplicación si no se conceden permisos
+        document.querySelector('.lightsaber').style.display = 'block'; // Mostrar el sable de luz
     }
 };
-
-// Función para restablecer la aplicación
-function resetApp() {
-    localTracks.forEach(track => {
-        if (track) {
-            track.stop();
-            track.close();
-        }
-    });
-    localTracks = [];
-    document.getElementById('join-btn').style.display = 'block';
-    document.getElementById('stream-controls').style.display = 'none';
-    document.querySelector('.lightsaber').style.display = 'none';
-    document.getElementById('video-streams').innerHTML = '';
-}
 
 // Manejar la unión de usuarios remotos
 let handleUserJoined = async (user, mediaType) => {
@@ -116,7 +98,15 @@ let leaveAndRemoveLocalStream = async () => {
     }
 
     await client.leave();
-    resetApp();
+    document.getElementById('join-btn').style.display = 'block';
+    document.getElementById('stream-controls').style.display = 'none';
+    document.querySelector('.lightsaber').style.display = 'none'; // Ocultar el sable de luz
+    document.getElementById('video-streams').innerHTML = '';
+
+    // Detener la grabación si está en curso
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+    }
 };
 
 // Alternar micrófono
@@ -156,9 +146,9 @@ function clearJoinTimeout() {
 async function startConnection() {
     const permissionsGranted = await requestPermissions();
     if (permissionsGranted) {
-        joinStream();
+        joinStream(); // Iniciar conexión si se conceden permisos
     } else {
-        resetApp(); // Restablecer si no se conceden permisos
+        document.getElementById('join-btn').style.display = 'block'; // Mantener visible
     }
 }
 
@@ -167,11 +157,13 @@ const sableSound = document.getElementById('sable-sound');
 sableSound.volume = 0.1; // Establecer el volumen al 10%
 
 async function startRecording() {
+    // Asegúrate de que el micrófono no esté silenciado
     if (localTracks[0].muted) {
         await localTracks[0].setMuted(false);
     }
 
-    sableSound.currentTime = 0;
+    // Reproducir el sonido del sable
+    sableSound.currentTime = 0; // Reiniciar el sonido para que se reproduzca desde el inicio
     sableSound.play();
 
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -188,8 +180,8 @@ async function startRecording() {
         const url = URL.createObjectURL(recordedBlob);
         const videoElement = document.getElementById('recorded-video');
         videoElement.src = url;
-        videoElement.style.display = 'block';
-        recordedChunks = [];
+        videoElement.style.display = 'block'; // Mostrar el video grabado
+        recordedChunks = []; // Limpiar los chunks grabados
     };
 
     mediaRecorder.start();
@@ -212,18 +204,14 @@ document.querySelector('.lightsaber').addEventListener('mouseout', stopRecording
 // Iniciar conexión al cargar la página
 document.addEventListener('DOMContentLoaded', startConnection);
 
-// Detectar cambios en la visibilidad
-document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible') {
-        // Verificar permisos nuevamente
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true }).catch((err) => {
-            console.error("Error al acceder a los medios: ", err);
-            resetApp(); // Reiniciar si no se pueden acceder a los medios
-        });
-        
-        // Si los permisos son válidos, solo los cerramos
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop()); // Detener el stream
-        }
-    }
-});
+
+// Iniciar la conexión automáticamente al cargar la página
+async function startConnection() {
+    const permissionsGranted = await requestPermissions();
+        // Esperar 6 segundos antes de iniciar la conexión
+    setTimeout(joinStream, 18000);
+    document.addEventListener('DOMContentLoaded', startConnection);
+
+    
+    
+}
