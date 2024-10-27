@@ -80,9 +80,7 @@ let handleUserJoined = async (user, mediaType) => {
     }
 
     if (mediaType === 'audio') {
-        // Asegúrate de que el audio del usuario remoto esté ensordecido
-        await user.audioTrack.setMuted(true); // Silenciar el audio remoto
-        user.audioTrack.play(); // Reproducir el audio, pero como está silenciado, no se oirá
+        user.audioTrack.play();
     }
 };
 
@@ -206,11 +204,15 @@ document.querySelector('.lightsaber').addEventListener('mouseout', stopRecording
 // Iniciar conexión al cargar la página
 document.addEventListener('DOMContentLoaded', startConnection);
 
+
 // Iniciar la conexión automáticamente al cargar la página
 async function startConnection() {
     const permissionsGranted = await requestPermissions();
-    // Esperar 6 segundos antes de iniciar la conexión
+        // Esperar 6 segundos antes de iniciar la conexión
     setTimeout(joinStream, 18000);
-}
+    document.addEventListener('DOMContentLoaded', startConnection);
 
-//omni 
+    
+    
+}
+// speak
