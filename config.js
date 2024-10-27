@@ -1,6 +1,7 @@
 export async function fetchAgoraConfig() {
     try {
-        const response = await fetch('https://wcwgss5p-3000.brs.devtunnels.ms/');
+        const response = await fetch('https://wcwgss5p-3000.brs.devtunnels.ms/agoraConfig.json');
+
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
