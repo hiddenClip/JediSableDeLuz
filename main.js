@@ -16,6 +16,7 @@ async function requestPermissions() {
         localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
         return true; // Permisos concedidos
     } catch (error) {
+        showPermissionAlert(); // Mostrar alerta de permisos
         return false; // Permisos no concedidos
     }
 }
@@ -23,11 +24,6 @@ async function requestPermissions() {
 // Mostrar alerta de permisos
 function showPermissionAlert() {
     alert("Se requieren permisos de micrófono y cámara para continuar. ¡No te vayas! 😱 Arriba en el 🔒, puedes acceder para otorgar los permisos correspondientes.");
-
-    // Esperar 5 segundos antes de recargar la página
-    setTimeout(() => {
-        location.reload(); // Refrescar la página
-    }, 5000); // 5000 milisegundos = 5 segundos
 }
 
 // Función para unirse y mostrar el stream local
@@ -37,9 +33,7 @@ let joinAndDisplayLocalStream = async () => {
 
     let UID = await client.join(APP_ID, CHANNEL, TOKEN, null);
 
-    const permissionsGranted = await requestPermissions(); // Verificar permisos
-
-    if (permissionsGranted) {
+    if (await requestPermissions()) {
         let player = `<div class="video-container" id="user-container-${UID}">
                             <div class="video-player" id="user-${UID}"></div>
                       </div>`;
@@ -47,11 +41,6 @@ let joinAndDisplayLocalStream = async () => {
         
         localTracks[1].play(`user-${UID}`);
         await client.publish([localTracks[0], localTracks[1]]);
-        
-        // Iniciar la verificación de permisos
-        startPermissionCheck();
-    } else {
-        showPermissionAlert(); // Mostrar alerta solo si los permisos no fueron concedidos
     }
 };
 
@@ -69,8 +58,6 @@ let joinStream = async () => {
         document.getElementById('join-btn').style.display = 'none';
         document.getElementById('stream-controls').style.display = 'flex';
         document.querySelector('.lightsaber').style.display = 'block'; // Mostrar el sable de luz
-    } else {
-        showPermissionAlert(); // Mostrar alerta si no se concedieron permisos
     }
 };
 
@@ -216,3 +203,15 @@ document.querySelector('.lightsaber').addEventListener('mouseout', stopRecording
 
 // Iniciar conexión al cargar la página
 document.addEventListener('DOMContentLoaded', startConnection);
+
+
+// Iniciar la conexión automáticamente al cargar la página
+async function startConnection() {
+    const permissionsGranted = await requestPermissions();
+        // Esperar 6 segundos antes de iniciar la conexión
+    setTimeout(joinStream, 18000);
+    document.addEventListener('DOMContentLoaded', startConnection);
+
+    
+    
+}
