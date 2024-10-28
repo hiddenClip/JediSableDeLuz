@@ -24,8 +24,13 @@ async function requestPermissions() {
 // Mostrar alerta de permisos
 function showPermissionAlert() {
     alert("Se requieren permisos de micrófono y cámara para continuar. ¡No te vayas! 😱 Arriba en el 🔒, puedes acceder para otorgar los permisos correspondientes.");
-    location.reload(); // Refrescar la página después de mostrar la alerta
+    
+    // Esperar 5 segundos antes de recargar la página
+    setTimeout(() => {
+        location.reload(); // Refrescar la página
+    }, 5000); // 5000 milisegundos = 5 segundos
 }
+
 
 // Función para verificar permisos de micrófono y cámara
 async function checkPermissions() {
