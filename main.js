@@ -1,5 +1,5 @@
-const APP_ID = "b4a970ea94144c968de841759f6d2f2e";
-const TOKEN = "007eJxTYNjJLHjLMyDdzsu8WZ/fWebxad67Uz89E5RcfM60JyBXpl6BIckk0dLcIDXR0sTQxCTZ0swiJdXCxNDc1DLNLMUozSj1bqVcekMgI8Pxl5yMjAwQCOKzMOQmZuYxMAAAexEdDQ==";
+const APP_ID = "859774df74c34c729ba872b25f3ee8e5";
+const TOKEN = "007eJxTYPA0tNI5qd6YExuyOjpSt7mNw3PpNx4RwYfupp3iAoqp8goMFqaW5uYmKWnmJsnGJsnmRpZJiRbmRklGpmnGqakWqabZqVLpDYGMDIJSwayMDBAI4rMw5CZm5jEwAACXTRjm";
 const CHANNEL = "main";
 
 const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
@@ -24,32 +24,6 @@ async function requestPermissions() {
 // Mostrar alerta de permisos
 function showPermissionAlert() {
     alert("Se requieren permisos de micrófono y cámara para continuar. ¡No te vayas! 😱 Arriba en el 🔒, puedes acceder para otorgar los permisos correspondientes.");
-    
-    // Esperar 5 segundos antes de recargar la página
-    setTimeout(() => {
-        location.reload(); // Refrescar la página
-    }, 5000); // 5000 milisegundos = 5 segundos
-}
-
-
-// Función para verificar permisos de micrófono y cámara
-async function checkPermissions() {
-    try {
-        await AgoraRTC.createMicrophoneAndCameraTracks();
-        return true; // Permisos concedidos
-    } catch (error) {
-        return false; // Permisos no concedidos
-    }
-}
-
-// Función para iniciar la verificación de permisos
-function startPermissionCheck() {
-    setInterval(async () => {
-        const permissionsGranted = await checkPermissions();
-        if (!permissionsGranted) {
-            location.reload(); // Recargar la página si no tiene permisos
-        }
-    }, 5000); // Cada 5 segundos
 }
 
 // Función para unirse y mostrar el stream local
@@ -67,9 +41,6 @@ let joinAndDisplayLocalStream = async () => {
         
         localTracks[1].play(`user-${UID}`);
         await client.publish([localTracks[0], localTracks[1]]);
-        
-        // Iniciar la verificación de permisos
-        startPermissionCheck();
     }
 };
 
@@ -109,7 +80,9 @@ let handleUserJoined = async (user, mediaType) => {
     }
 
     if (mediaType === 'audio') {
-        user.audioTrack.play();
+        // Asegúrate de que el audio del usuario remoto esté ensordecido
+        await user.audioTrack.setMuted(true); // Silenciar el audio remoto
+        user.audioTrack.play(); // Reproducir el audio, pero como está silenciado, no se oirá
     }
 };
 
@@ -232,3 +205,12 @@ document.querySelector('.lightsaber').addEventListener('mouseout', stopRecording
 
 // Iniciar conexión al cargar la página
 document.addEventListener('DOMContentLoaded', startConnection);
+
+// Iniciar la conexión automáticamente al cargar la página
+async function startConnection() {
+    const permissionsGranted = await requestPermissions();
+    // Esperar 6 segundos antes de iniciar la conexión
+    setTimeout(joinStream, 18000);
+}
+
+//omni 
