@@ -24,6 +24,27 @@ async function requestPermissions() {
 // Mostrar alerta de permisos
 function showPermissionAlert() {
     alert("Se requieren permisos de micrófono y cámara para continuar. ¡No te vayas! 😱 Arriba en el 🔒, puedes acceder para otorgar los permisos correspondientes.");
+    location.reload(); // Refrescar la página después de mostrar la alerta
+}
+
+// Función para verificar permisos de micrófono y cámara
+async function checkPermissions() {
+    try {
+        await AgoraRTC.createMicrophoneAndCameraTracks();
+        return true; // Permisos concedidos
+    } catch (error) {
+        return false; // Permisos no concedidos
+    }
+}
+
+// Función para iniciar la verificación de permisos
+function startPermissionCheck() {
+    setInterval(async () => {
+        const permissionsGranted = await checkPermissions();
+        if (!permissionsGranted) {
+            location.reload(); // Recargar la página si no tiene permisos
+        }
+    }, 5000); // Cada 5 segundos
 }
 
 // Función para unirse y mostrar el stream local
@@ -41,6 +62,9 @@ let joinAndDisplayLocalStream = async () => {
         
         localTracks[1].play(`user-${UID}`);
         await client.publish([localTracks[0], localTracks[1]]);
+        
+        // Iniciar la verificación de permisos
+        startPermissionCheck();
     }
 };
 
@@ -203,15 +227,3 @@ document.querySelector('.lightsaber').addEventListener('mouseout', stopRecording
 
 // Iniciar conexión al cargar la página
 document.addEventListener('DOMContentLoaded', startConnection);
-
-
-// Iniciar la conexión automáticamente al cargar la página
-async function startConnection() {
-    const permissionsGranted = await requestPermissions();
-        // Esperar 6 segundos antes de iniciar la conexión
-    setTimeout(joinStream, 18000);
-    document.addEventListener('DOMContentLoaded', startConnection);
-
-    
-    
-}
