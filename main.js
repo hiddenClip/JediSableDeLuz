@@ -24,6 +24,7 @@ async function requestPermissions() {
 // Mostrar alerta de permisos
 function showPermissionAlert() {
     alert("Se requieren permisos de micrófono y cámara para continuar. ¡No te vayas! 😱 Arriba en el 🔒, puedes acceder para otorgar los permisos correspondientes.");
+    location.reload(); // Refrescar la página después de mostrar la alerta
 }
 
 // Función para unirse y mostrar el stream local
@@ -50,9 +51,8 @@ let joinStream = async () => {
     const permissionsGranted = await requestPermissions(); // Verificar permisos
 
     if (permissionsGranted) {
-        // Establecer la imagen de fondo
         document.body.style.backgroundImage = "url('./454529.jpg')";
-        document.body.style.backgroundSize = "cover"; // Asegurarte de que la imagen cubra todo el fondo
+        document.body.style.backgroundSize = "cover"; 
 
         await joinAndDisplayLocalStream();
         document.getElementById('join-btn').style.display = 'none';
@@ -79,8 +79,10 @@ let handleUserJoined = async (user, mediaType) => {
         user.videoTrack.play(`user-${user.uid}`);
     }
 
+    // Reproducir el audio pero mantenerlo silenciado para otros usuarios
     if (mediaType === 'audio') {
-        user.audioTrack.play();
+        await user.audioTrack.setMuted(true); // Silenciar el audio remoto
+        user.audioTrack.play(); // Reproducir el audio, pero como está silenciado, no se oirá
     }
 };
 
@@ -92,9 +94,9 @@ let handleUserLeft = async (user) => {
 
 // Dejar el stream y limpiar
 let leaveAndRemoveLocalStream = async () => {
-    for (let i = 0; localTracks.length > i; i++) {
-        localTracks[i].stop();
-        localTracks[i].close();
+    for (let track of localTracks) {
+        track.stop();
+        track.close();
     }
 
     await client.leave();
@@ -157,13 +159,11 @@ const sableSound = document.getElementById('sable-sound');
 sableSound.volume = 0.1; // Establecer el volumen al 10%
 
 async function startRecording() {
-    // Asegúrate de que el micrófono no esté silenciado
     if (localTracks[0].muted) {
         await localTracks[0].setMuted(false);
     }
 
-    // Reproducir el sonido del sable
-    sableSound.currentTime = 0; // Reiniciar el sonido para que se reproduzca desde el inicio
+    sableSound.currentTime = 0;
     sableSound.play();
 
     const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -180,7 +180,7 @@ async function startRecording() {
         const url = URL.createObjectURL(recordedBlob);
         const videoElement = document.getElementById('recorded-video');
         videoElement.src = url;
-        videoElement.style.display = 'block'; // Mostrar el video grabado
+        videoElement.style.display = 'block';
         recordedChunks = []; // Limpiar los chunks grabados
     };
 
@@ -205,13 +205,4 @@ document.querySelector('.lightsaber').addEventListener('mouseout', stopRecording
 document.addEventListener('DOMContentLoaded', startConnection);
 
 
-// Iniciar la conexión automáticamente al cargar la página
-async function startConnection() {
-    const permissionsGranted = await requestPermissions();
-        // Esperar 6 segundos antes de iniciar la conexión
-    setTimeout(joinStream, 18000);
-    document.addEventListener('DOMContentLoaded', startConnection);
-
-    
-    
-}
+// new omni reparado
